@@ -1,15 +1,21 @@
-# Use a base image with Java
-FROM openjdk:11-jre-slim
+# Use an official OpenJDK base image
+FROM openjdk:11
 
-# Metadata (optional)
-LABEL maintainer="your_email@example.com"
-LABEL description="Wine Quality Prediction using Apache Spark"
+# Install Spark dependencies
+ENV SPARK_VERSION=3.4.1 \
+    HADOOP_VERSION=3
 
-# Create app directory
+RUN apt-get update && apt-get install -y curl wget && \
+    curl -L https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
+    | tar -xz -C /opt/ && \
+    mv /opt/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} /opt/spark
+
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+
+# Copy your jar or source code into the container
 WORKDIR /app
+COPY . /app
 
-# Copy your built JAR into the container
-COPY target/wine-quality-predictor-1.0.jar app.jar
-
-# Default command: can be overridden when running `spark-submit`
-CMD ["java", "-jar", "app.jar"]
+# Default command to run (you can override it during spark-submit)
+CMD ["bash"]
